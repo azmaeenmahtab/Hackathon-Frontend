@@ -48,9 +48,9 @@ export default function GlassNavbar() {
             EN ▼
           </button>
           <button className="px-4 py-2 rounded-full bg-white text-black font-semibold shadow-md hover:bg-gray-100">
-            Book a Demo
+            Login
           </button>
-          <button className="text-white hover:text-gray-300">Sign in</button>
+          <button className="text-white hover:text-gray-300">Sign Up</button>
         </div>
       </div>
     </div>

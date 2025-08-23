@@ -1,17 +1,15 @@
 import { useState, useEffect } from "react";
 
-export default function Navbar() {
+export default function GlassNavbar() {
   const [show, setShow] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > lastScrollY) {
-        // Scrolling down → hide navbar
-        setShow(false);
+        setShow(false); // hide on scroll down
       } else {
-        // Scrolling up → show navbar
-        setShow(true);
+        setShow(true); // show on scroll up
       }
       setLastScrollY(window.scrollY);
     };
@@ -22,36 +20,39 @@ export default function Navbar() {
 
   return (
     <div
-      className={`fixed top-0 left-0 w-full z-50 transition-transform duration-300 ${
-        show ? "translate-y-0" : "-translate-y-full"
-      } bg-gray-900 text-white shadow-md`}
+      className={`fixed left-1/2 transform -translate-x-1/2 top-5 w-[90%] max-w-6xl z-50 
+        transition-transform duration-300 ${
+          show ? "translate-y-0" : "-translate-y-[150%]"
+        }`}
     >
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        
+      <div
+        className="flex items-center justify-between px-6 py-3 rounded-full 
+                   bg-white/10 backdrop-blur-md border border-white/20 shadow-lg"
+      >
         {/* Left - Nav Links */}
-        <ul className="flex gap-6">
-          <li className="hover:text-gray-400 cursor-pointer">Home</li>
-          <li className="hover:text-gray-400 cursor-pointer">About</li>
-          <li className="hover:text-gray-400 cursor-pointer">Services</li>
-          <li className="hover:text-gray-400 cursor-pointer">Contact</li>
+        <ul className="flex items-center gap-6 text-white font-medium">
+          <li className="hover:text-gray-300 cursor-pointer">Platform</li>
+          <li className="hover:text-gray-300 cursor-pointer">Customer Stories</li>
+          <li className="hover:text-gray-300 cursor-pointer">Resources</li>
+          <li className="hover:text-gray-300 cursor-pointer">Pricing</li>
         </ul>
 
         {/* Center - Brand */}
-        <h1 className="absolute left-1/2 transform -translate-x-1/2 text-xl font-bold">
-          UnIvents
+        <h1 className="absolute left-1/2 transform -translate-x-1/2 text-xl font-bold text-white">
+          MyBrand
         </h1>
 
         {/* Right - Buttons */}
-        <div className="flex gap-4">
-          <button className="px-4 py-2 rounded-lg border border-gray-400 hover:bg-gray-700 transition">
-            Login
+        <div className="flex items-center gap-4">
+          <button className="px-3 py-1 border border-white/50 rounded-full text-white hover:bg-white/10">
+            EN ▼
           </button>
-          <button className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition">
-            Signup
+          <button className="px-4 py-2 rounded-full bg-white text-black font-semibold shadow-md hover:bg-gray-100">
+            Book a Demo
           </button>
+          <button className="text-white hover:text-gray-300">Sign in</button>
         </div>
       </div>
     </div>
   );
 }
-

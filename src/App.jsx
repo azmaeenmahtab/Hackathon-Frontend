@@ -6,7 +6,7 @@ import SignIn from "./components/AuthPages/Signin/SignIn";
 import SignUp from "./components/AuthPages/Signup/signup";
 import AdminDashboard from './components/Admin Dashboard/admindashboard';
 import AdminManageEvents from './components/Admin Dashboard/manageEvents';
-import StudentDashboard from './components/Student Dashboard/studentdashboard';
+
 import StudentAllEvents from './components/Student Dashboard/AllEvents';
 import StudentMyEvents from './components/Student Dashboard/MyEvents';
 function App() {

@@ -1,15 +1,16 @@
-/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EventCard from "../Event cards/EventCard";
 import { getAuth } from "firebase/auth";
+import Modal from "../../components/Modal/Modal";
 
 const StudentAllEvents = () => {
   const [allEvents, setAllEvents] = useState([]);
   const navigate = useNavigate();
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
-    // Fetch all events from backend
     async function fetchEvents() {
       const auth = getAuth();
       const user = auth.currentUser;
@@ -25,14 +26,41 @@ const StudentAllEvents = () => {
     fetchEvents();
   }, []);
 
-  // Register for event handler (implement as needed)
-  const handleRegister = (eventId) => {
-    // ...
-  };
+  // Register for event
+  const handleRegister = async (eventId) => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) return;
+
+    try{
+    console.log("event id:", eventId);
+
+    const uid = localStorage.getItem("uid");
+    const token = await user.getIdToken();
+    const res = await fetch(`http://localhost:4000/api/global/events-register/${eventId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ uid })
+    });
+
+    if (res.ok) {
+      setSelectedEvent(null); // close event details
+      setShowSuccess(true);   // show success popup
+    } else {
+      alert("Failed to register. Try again.");
+    }
+  } catch (error) {
+    console.error("Error registering for event:", error);
+  }
+};
+
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar (reuse or import as a component if needed) */}
+      {/* Sidebar */}
       <aside className="w-64 bg-white shadow-lg p-6 flex flex-col gap-6">
         <h2 className="text-xl font-bold mb-4">Student Dashboard</h2>
         <nav className="flex flex-col gap-3">
@@ -43,6 +71,8 @@ const StudentAllEvents = () => {
           <button className="text-red-500 mt-8 font-semibold text-left">Logout</button>
         </nav>
       </aside>
+
+      {/* Main Content */}
       <main className="flex-1 p-8">
         <h3 className="text-lg font-bold mb-4">All Events</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -57,13 +87,52 @@ const StudentAllEvents = () => {
                 title={event.title}
                 description={event.description}
                 date={event.date}
-                onButtonClick={() => handleRegister(event.id)}
+                onButtonClick={() => setSelectedEvent(event)}
                 buttonLabel="Register"
               />
             ))
           )}
         </div>
       </main>
+
+      {/* Event Details Modal */}
+      {selectedEvent && (
+        <Modal onClose={() => setSelectedEvent(null)}>
+          <h2 className="text-xl font-bold mb-3">{selectedEvent.title}</h2>
+          <p className="text-gray-600 mb-2"><strong>Type:</strong> {selectedEvent.type}</p>
+          <p className="text-gray-600 mb-2"><strong>Date:</strong> {selectedEvent.date}</p>
+          <p className="text-gray-700 mb-4">{selectedEvent.description}</p>
+          <div className="flex justify-end gap-3 mt-6">
+            <button
+              onClick={() => setSelectedEvent(null)}
+              className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100"
+            >
+              Not Now
+            </button>
+            <button
+              onClick={() => handleRegister(selectedEvent.id)}
+              className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Register
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {/* Success Popup */}
+      {showSuccess && (
+        <Modal onClose={() => setShowSuccess(false)}>
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-green-600 mb-4">Successfully Registered!</h2>
+            <button
+              onClick={() => setShowSuccess(false)}
+              className="mt-4 px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
+            >
+              OK
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };

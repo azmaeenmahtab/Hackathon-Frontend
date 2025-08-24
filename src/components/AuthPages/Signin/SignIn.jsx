@@ -2,10 +2,12 @@
 
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth } from "../../../firebase";
 
 function SignIn() {
+  const navigate = useNavigate();
   const googleProvider = new GoogleAuthProvider();
   const [mail, setMail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,7 +38,16 @@ function SignIn() {
           body: JSON.stringify({ uid: res.user.uid })
         });
         const apiData = await apiRes.json();
+        localStorage.setItem("uid", res.user.uid);
         console.log("/auth/getuser response:", apiData);
+              console.log("Signed in user token:", res.user.accessToken);
+
+        // Navigate based on role
+        if (apiData && apiData.profile.role === "student") {
+          navigate("/student/dashboard");
+        } else if (apiData && apiData.profile.role === "admin") {
+          navigate("/admin/dashboard");
+        }
       }
     } catch (error) {
       console.error(error);
@@ -63,6 +74,12 @@ function SignIn() {
         });
         const apiData = await apiRes.json();
         console.log("/auth/getuser response:", apiData);
+        // Navigate based on role
+        if (apiData && apiData.profile.role === "student") {
+          navigate("/student/dashboard");
+        } else if (apiData && apiData.profile.role === "admin") {
+          navigate("/admin/dashboard");
+        }
       }
       console.log("Signed in user token:", res.user.accessToken);
     } catch (err) {

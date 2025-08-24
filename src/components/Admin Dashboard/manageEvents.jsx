@@ -1,18 +1,21 @@
 // src/components/AdminManageEvents.js
 import React, { useEffect, useState } from "react";
+import { getAuth } from "firebase/auth";
 // import { apiFetch } from "../utils/fetchHelper";
 
 export default function AdminManageEvents() {
   const [events, setEvents] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [editingEvent, setEditingEvent] = useState(null);
   const [form, setForm] = useState({
     title: "",
     description: "",
     category: "",
+    location_name: "",
     start_at: "",
     end_at: "",
+    registration_deadline: "",
     max_capacity: "",
+    is_cancelled: false,
   });
 
   useEffect(() => {
@@ -20,57 +23,84 @@ export default function AdminManageEvents() {
   }, []);
 
   async function loadEvents() {
-    const res = await apiFetch("/events");
+    const uid = localStorage.getItem("uid");
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) return;
+    const token = await user.getIdToken();
+    const res = await fetch("http://localhost:4000/api/admin/events-all", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ uid })
+    });
     setEvents(await res.json());
   }
 
-  function openForm(event = null) {
-    if (event) {
-      setEditingEvent(event);
-      setForm({
-        title: event.title,
-        description: event.description,
-        category: event.category,
-        start_at: event.start_at,
-        end_at: event.end_at,
-        max_capacity: event.max_capacity || "",
-      });
-    } else {
-      setEditingEvent(null);
-      setForm({
-        title: "",
-        description: "",
-        category: "",
-        start_at: "",
-        end_at: "",
-        max_capacity: "",
-      });
-    }
+  function openForm() {
+    setForm({
+      title: "",
+      description: "",
+      category: "",
+      location_name: "",
+      start_at: "",
+      end_at: "",
+      registration_deadline: "",
+      max_capacity: "",
+      is_cancelled: false,
+    });
     setShowForm(true);
   }
 
-  async function saveEvent(e) {
+  async function saveEvent(e) {  // create event
     e.preventDefault();
-    if (editingEvent) {
-      // Update existing event
-      await apiFetch(`/events/${editingEvent.id}`, {
-        method: "PATCH",
-        body: JSON.stringify(form),
-      });
-    } else {
-      // Create new event
-      await apiFetch("/events", {
+    const uid = localStorage.getItem("uid");
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) return;
+    const token = await user.getIdToken();
+    // 1. Get or create location and get its id
+    let location_id = null;
+    try {
+      const locRes = await fetch("http://localhost:4000/api/location/setLocation", {
         method: "POST",
-        body: JSON.stringify(form),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ name: form.location_name })
       });
+      const locData = await locRes.json();
+      location_id = locData.id || locData.location_id;
+    } catch (err) {
+      alert("Failed to set location");
+      return;
     }
+    // 2. Prepare event data with default image URL
+    const eventData = {
+      ...form,
+      location_id,
+      image_url: "https://placehold.co/600x400?text=Event+Image", // default image
+      uid
+    };
+    delete eventData.location_name;
+    await fetch("http://localhost:4000/api/admin/create-event", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(eventData),
+    });
     setShowForm(false);
     loadEvents();
   }
 
   async function cancelEvent(id) {
     if (!window.confirm("Are you sure you want to cancel this event?")) return;
-    await apiFetch(`/events/${id}`, { method: "DELETE" });
+    await fetch(`/events/${id}`, { method: "DELETE" });
     loadEvents();
   }
 
@@ -88,54 +118,31 @@ export default function AdminManageEvents() {
 
       {/* Events List */}
       <div className="bg-white shadow rounded p-4">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b">
-              <th className="p-2">Title</th>
-              <th className="p-2">Date</th>
-              <th className="p-2">Capacity</th>
-              <th className="p-2">Status</th>
-              <th className="p-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {events.map((evt) => (
-              <tr key={evt.id} className="border-b">
-                <td className="p-2">{evt.title}</td>
-                <td className="p-2">
-                  {new Date(evt.start_at).toLocaleDateString()} -{" "}
-                  {new Date(evt.end_at).toLocaleDateString()}
-                </td>
-                <td className="p-2">{evt.max_capacity || "Unlimited"}</td>
-                <td className="p-2">
-                  {evt.is_cancelled ? (
-                    <span className="text-red-600">Cancelled</span>
-                  ) : (
-                    <span className="text-green-600">Active</span>
-                  )}
-                </td>
-                <td className="p-2 space-x-2">
-                  {!evt.is_cancelled && (
-                    <>
-                      <button
-                        className="px-3 py-1 bg-yellow-500 text-white rounded"
-                        onClick={() => openForm(evt)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="px-3 py-1 bg-red-500 text-white rounded"
-                        onClick={() => cancelEvent(evt.id)}
-                      >
-                        Cancel
-                      </button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <h2 className="text-lg font-bold mb-4">All Events</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {events.map((evt) => (
+            <div key={evt.id} className="rounded-xl border border-blue-100 bg-white p-6 shadow hover:shadow-xl transition flex flex-col gap-2 min-w-[300px]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-2xl">🎫</span>
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${evt.is_cancelled ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>{evt.is_cancelled ? 'Cancelled' : 'Active'}</span>
+              </div>
+              <div className="font-bold text-lg text-gray-900">{evt.title}</div>
+              <div className="text-gray-500 text-sm mb-2">{evt.description}</div>
+              <div className="text-xs text-gray-400 mb-1">{new Date(evt.start_at).toLocaleString()} - {new Date(evt.end_at).toLocaleString()}</div>
+              <div className="text-xs text-gray-400 mb-3">Capacity: {evt.max_capacity || 'Unlimited'}</div>
+              <div className="flex gap-2 mt-auto">
+                {!evt.is_cancelled && (
+                  <button
+                    className="px-3 py-1 bg-red-500 text-white rounded"
+                    onClick={() => cancelEvent(evt.id)}
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Create/Edit Form */}
@@ -143,7 +150,7 @@ export default function AdminManageEvents() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white rounded-lg shadow p-6 w-full max-w-lg">
             <h2 className="text-xl font-bold mb-4">
-              {editingEvent ? "Edit Event" : "Create Event"}
+              Create Event
             </h2>
             <form onSubmit={saveEvent} className="space-y-4">
               <input
@@ -160,13 +167,28 @@ export default function AdminManageEvents() {
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 className="w-full border p-2 rounded"
               />
-              <input
-                type="text"
-                placeholder="Category"
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-                className="w-full border p-2 rounded"
-              />
+                <input
+                  type="text"
+                  placeholder="Category"
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  className="w-full border p-2 rounded"
+                />
+                <input
+                  type="text"
+                  placeholder="Location Name"
+                  value={form.location_name}
+                  onChange={(e) => setForm({ ...form, location_name: e.target.value })}
+                  className="w-full border p-2 rounded"
+                  required
+                />
+                <input
+                  type="datetime-local"
+                  placeholder="Registration Deadline"
+                  value={form.registration_deadline}
+                  onChange={(e) => setForm({ ...form, registration_deadline: e.target.value })}
+                  className="w-full border p-2 rounded"
+                />
               <div className="flex space-x-2">
                 <input
                   type="datetime-local"
@@ -202,7 +224,7 @@ export default function AdminManageEvents() {
                   type="submit"
                   className="px-4 py-2 bg-blue-600 text-white rounded"
                 >
-                  {editingEvent ? "Update" : "Create"}
+                  Create
                 </button>
               </div>
             </form>

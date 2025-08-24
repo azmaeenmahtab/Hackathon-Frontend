@@ -6,6 +6,7 @@ import SignIn from "./components/AuthPages/Signin/SignIn";
 import SignUp from "./components/AuthPages/Signup/signup";
 import AdminDashboard from './components/Admin Dashboard/admindashboard';
 import AdminManageEvents from './components/Admin Dashboard/manageEvents';
+import StudentDashboard from './components/Student Dashboard/studentdashboard';
 function App() {
   return (
     <Routes>
@@ -13,8 +14,9 @@ function App() {
       <Route path="/signin" element={<SignIn />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      <Route path="/student/dashboard" element={<StudentDashboard />} />
       <Route path="/admin/manage-events" element={<AdminManageEvents />} />
-      {/* Add more routes as needed */}
+  {/* Add more routes as needed */}
     </Routes>
   );
 }

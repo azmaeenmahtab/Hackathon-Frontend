@@ -48,7 +48,7 @@ export default function AdminDashboard() {
     try {
       const token = await user.getIdToken();
       const uid = localStorage.getItem("uid");
-      const res = await fetch("http://localhost:4000/api/admin/stats", {
+      const res = await fetch("https://hackathon-backend-1-2wm6.onrender.com/api/admin/stats", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ uid })
@@ -66,7 +66,7 @@ export default function AdminDashboard() {
     try {
       const token = await user.getIdToken();
       const uid = localStorage.getItem("uid");
-      const res = await fetch("http://localhost:4000/api/admin/events-all", {
+      const res = await fetch("https://hackathon-backend-1-2wm6.onrender.com/api/admin/events-all", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ uid })
@@ -87,7 +87,7 @@ export default function AdminDashboard() {
       if (!user) throw new Error("No authenticated user");
       const token = await user.getIdToken();
       const uid = localStorage.getItem("uid");
-      const res = await fetch(`http://localhost:4000/api/events/${eventId}/registrations`, {
+      const res = await fetch(`https://hackathon-backend-1-2wm6.onrender.com/api/events/${eventId}/registrations`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ uid })
@@ -108,7 +108,7 @@ export default function AdminDashboard() {
       if (!user) throw new Error("No authenticated user");
       const token = await user.getIdToken();
       const uid = localStorage.getItem("uid");
-      await fetch(`http://localhost:4000/api/registrations/${regId}/attendance`, {
+      await fetch(`https://hackathon-backend-1-2wm6.onrender.com/api/registrations/${regId}/attendance`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ uid })
@@ -126,7 +126,7 @@ export default function AdminDashboard() {
       if (!user) throw new Error("No authenticated user");
       const token = await user.getIdToken();
       const uid = localStorage.getItem("uid");
-      await fetch(`http://localhost:4000/api/events/${eventId}/certificates/generate`, {
+      await fetch(`https://hackathon-backend-1-2wm6.onrender.com/api/events/${eventId}/certificates/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ uid })

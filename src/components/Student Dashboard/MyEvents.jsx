@@ -17,7 +17,7 @@ const StudentMyEvents = () => {
       const token = await user.getIdToken();
       const uid = localStorage.getItem("uid"); // or user.uid
       try {
-        const res = await fetch("http://localhost:4000/api/student/my-events", {
+        const res = await fetch("https://hackathon-backend-1-2wm6.onrender.com/api/student/my-events", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -44,7 +44,7 @@ const StudentMyEvents = () => {
     const uid = localStorage.getItem("uid");
 
     try {
-      const res = await fetch(`http://localhost:4000/api/global/events-unregister/${eventId}`, {
+      const res = await fetch(`https://hackathon-backend-1-2wm6.onrender.com/api/global/events-unregister/${eventId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

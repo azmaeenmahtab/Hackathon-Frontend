@@ -14,7 +14,7 @@ function SignUp() {
 
   async function syncProfile(user, role) {
     const token = await user.getIdToken();
-    await fetch("http://localhost:4000/api/signup/auth/sync", {
+    await fetch("https://hackathon-backend-1-2wm6.onrender.com/api/signup/auth/sync", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

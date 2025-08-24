@@ -30,7 +30,7 @@ export default function AdminManageEvents() {
     try {
       const token = await user.getIdToken();
       const uid = localStorage.getItem("uid");
-      const res = await fetch("http://localhost:4000/api/admin/events-all", {
+      const res = await fetch("https://hackathon-backend-1-2wm6.onrender.com/api/admin/events-all", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -72,7 +72,7 @@ export default function AdminManageEvents() {
     // 1. Get or create location and get its id
     let location_id = null;
     try {
-      const locRes = await fetch("http://localhost:4000/api/location/setLocation", {
+      const locRes = await fetch("https://hackathon-backend-1-2wm6.onrender.com/api/location/setLocation", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -97,7 +97,7 @@ export default function AdminManageEvents() {
     delete eventData.location_name;
 
     try {
-      await fetch("http://localhost:4000/api/admin/create-event", {
+      await fetch("https://hackathon-backend-1-2wm6.onrender.com/api/admin/create-event", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -124,7 +124,7 @@ export default function AdminManageEvents() {
     const uid = localStorage.getItem("uid");
 
     try {
-      const res = await fetch(`http://localhost:4000/api/admin/events/${id}/cancel`, { 
+      const res = await fetch(`https://hackathon-backend-1-2wm6.onrender.com/api/admin/events/${id}/cancel`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -12,7 +12,7 @@ function SignIn() {
 
   async function syncProfile(user) {
     const token = await user.getIdToken();
-    await fetch("http://localhost:4000/api/login/auth/login", {
+    await fetch("https://hackathon-backend-1-2wm6.onrender.com/api/login/auth/login", {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -23,7 +23,7 @@ function SignIn() {
       const res = await signInWithEmailAndPassword(auth, mail, password);
       await syncProfile(res.user);
       const token = await res.user.getIdToken();
-      const apiRes = await fetch("http://localhost:4000/auth/get-user", {
+      const apiRes = await fetch("https://hackathon-backend-1-2wm6.onrender.com/auth/get-user", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -49,7 +49,7 @@ function SignIn() {
       const res = await signInWithPopup(auth, googleProvider);
       await syncProfile(res.user);
       const token = await res.user.getIdToken();
-      const apiRes = await fetch("http://localhost:4000/auth/get-user", {
+      const apiRes = await fetch("https://hackathon-backend-1-2wm6.onrender.com/auth/get-user", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -17,7 +17,7 @@ const StudentAllEvents = () => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
       const token = await user.getIdToken();
-      const res = await fetch("http://localhost:4000/api/global/events-all", {
+      const res = await fetch("https://hackathon-backend-1-2wm6.onrender.com/api/global/events-all", {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -40,7 +40,7 @@ const StudentAllEvents = () => {
       const uid = localStorage.getItem("uid");
       const token = await user.getIdToken();
       const res = await fetch(
-        `http://localhost:4000/api/global/events-register/${eventId}`,
+        `https://hackathon-backend-1-2wm6.onrender.com/api/global/events-register/${eventId}`,
         {
           method: "POST",
           headers: {

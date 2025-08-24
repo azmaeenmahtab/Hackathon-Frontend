@@ -1,7 +1,6 @@
 /* eslint-disable no-unused-vars */
-// src/components/AdminManageEvents.js
 import React, { useEffect, useState } from "react";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 
 export default function AdminManageEvents() {
   const [events, setEvents] = useState([]);
@@ -40,7 +39,6 @@ export default function AdminManageEvents() {
         body: JSON.stringify({ uid })
       });
       const data = await res.json();
-      // only show active events
       setEvents(data.filter(evt => !evt.is_cancelled));
     } catch (err) {
       console.error(err);
@@ -136,7 +134,6 @@ export default function AdminManageEvents() {
       });
       const data = await res.json();
       if (res.ok) {
-        // remove the cancelled event immediately from the UI
         setEvents(prev => prev.filter(evt => evt.id !== id));
       } else {
         alert(data.error || "Failed to cancel event.");
@@ -147,46 +144,84 @@ export default function AdminManageEvents() {
     }
   }
 
-  return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Manage Events</h1>
-        <button
-          onClick={() => openForm()}
-          className="px-4 py-2 bg-blue-600 text-white rounded"
-        >
-          + Create Event
-        </button>
-      </div>
+  const handleLogout = async () => {
+    try {
+      const auth = getAuth();
+      await signOut(auth);
+      localStorage.removeItem("uid");
+      window.location.href = "/signin"; 
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
-      {/* Events List */}
-      <div className="bg-white shadow rounded p-4">
-        <h2 className="text-lg font-bold mb-4">All Events</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map((evt) => (
-            <div key={evt.id} className="rounded-xl border border-blue-100 bg-white p-6 shadow hover:shadow-xl transition flex flex-col gap-2 min-w-[300px]">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-2xl">🎫</span>
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${evt.is_cancelled ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
-                  {evt.is_cancelled ? 'Cancelled' : 'Active'}
-                </span>
+  return (
+    <div className="flex min-h-screen bg-gray-100">
+      {/* Sidebar */}
+  <div className="w-64 bg-white shadow-md flex flex-col justify-between sticky top-0 h-screen">
+    <div className="p-6 flex flex-col gap-4">
+      <h2 className="text-2xl font-bold text-purple-700">UnIvents</h2>
+      <h2 className="text-xl font-bold">Admin Panel</h2>
+      <button
+        onClick={() => window.location.href = "/admin/dashboard"}
+        className="px-4 py-2 bg-gray-600 text-white rounded"
+      >
+        Dashboard
+      </button>
+      <button
+        onClick={() => window.location.href = "/admin/manage-events"}
+        className="px-4 py-2 bg-blue-600 text-white rounded"
+      >
+        Manage Events
+      </button>
+      <button
+        onClick={() => openForm()}
+        className="px-4 py-2 bg-blue-600 text-white rounded"
+      >
+       Create Event
+      </button>
+    </div>
+    <div className="p-6">
+      <button
+        onClick={handleLogout}
+        className="w-full px-4 py-2 bg-red-600 text-white rounded"
+      >
+        Logout
+      </button>
+    </div>
+  </div>
+
+      {/* Main Content */}
+      <div className="flex-1 p-6 overflow-auto">
+        {/* Events List */}
+        <div className="bg-white shadow rounded p-4">
+          <h2 className="text-lg font-bold mb-4">All Events</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {events.map((evt) => (
+              <div key={evt.id} className="rounded-xl border border-blue-100 bg-white p-6 shadow hover:shadow-xl transition flex flex-col gap-2 min-w-[300px]">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-2xl">🎫</span>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${evt.is_cancelled ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                    {evt.is_cancelled ? 'Cancelled' : 'Active'}
+                  </span>
+                </div>
+                <div className="font-bold text-lg text-gray-900">{evt.title}</div>
+                <div className="text-gray-500 text-sm mb-2">{evt.description}</div>
+                <div className="text-xs text-gray-400 mb-1">{new Date(evt.start_at).toLocaleString()} - {new Date(evt.end_at).toLocaleString()}</div>
+                <div className="text-xs text-gray-400 mb-3">Capacity: {evt.max_capacity || 'Unlimited'}</div>
+                <div className="flex gap-2 mt-auto">
+                  {!evt.is_cancelled && (
+                    <button
+                      className="px-3 py-1 bg-red-500 text-white rounded"
+                      onClick={() => cancelEvent(evt.id)}
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="font-bold text-lg text-gray-900">{evt.title}</div>
-              <div className="text-gray-500 text-sm mb-2">{evt.description}</div>
-              <div className="text-xs text-gray-400 mb-1">{new Date(evt.start_at).toLocaleString()} - {new Date(evt.end_at).toLocaleString()}</div>
-              <div className="text-xs text-gray-400 mb-3">Capacity: {evt.max_capacity || 'Unlimited'}</div>
-              <div className="flex gap-2 mt-auto">
-                {!evt.is_cancelled && (
-                  <button
-                    className="px-3 py-1 bg-red-500 text-white rounded"
-                    onClick={() => cancelEvent(evt.id)}
-                  >
-                    Cancel
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 

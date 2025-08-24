@@ -1,7 +1,8 @@
 import hero from "../../../assets/hero.jpg"
 import React from "react";
-
+import { useNavigate } from "react-router-dom";
 const Hero = () => {
+	const navigate = useNavigate();
 	return (
 		<section 
   className="relative w-full h-screen bg-cover bg-center" 
@@ -16,7 +17,7 @@ const Hero = () => {
     <p className="mt-4 text-lg md:text-xl max-w-2xl drop-shadow">
       Empowering universities and higher education through impactful event management solutions.
     </p>
-    <button className="mt-6 px-6 py-3 bg-white/20 backdrop-blur-md hover:bg-white/30 rounded-2xl shadow-lg border border-white/30">
+    <button className="mt-6 px-6 py-3 bg-white/20 backdrop-blur-md hover:bg-white/30 rounded-2xl shadow-lg border border-white/30" onClick={() => navigate("/signup")}>
       Get Started
     </button>
   </div>

@@ -93,15 +93,37 @@ const StudentMyEvents = () => {
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-lg p-6 flex flex-col gap-6">
-        <h2 className="text-xl font-bold mb-4">Student Dashboard</h2>
-        <nav className="flex flex-col gap-3">
-          <a href="/student/my-events/dashboard" className="text-blue-600 font-semibold">My Events</a>
-          <button onClick={() => navigate("/student/dashboard")}
-            className="text-gray-700 text-left">All Events</button>
-          <button className="text-red-500 mt-8 font-semibold text-left" onClick={handleLogout}>Logout</button>
-        </nav>
-      </aside>
+      <div className="w-64 bg-white shadow-md flex flex-col justify-between sticky top-0 h-screen">
+        <div className="p-6 flex flex-col gap-4">
+          <h2 className="text-2xl font-bold text-purple-700">UnIvents</h2>
+          <button
+            onClick={() => navigate("/student/my-events/dashboard")}
+            className="px-4 py-2 bg-gray-600 text-white rounded"
+          >
+            My Events
+          </button>
+          <button
+            onClick={() => navigate("/student/dashboard")}
+            className="px-4 py-2 bg-blue-600 text-white rounded"
+          >
+            All Events
+          </button>
+          <button
+             
+            className="px-4 py-2 bg-gray-600 text-white rounded"
+          >
+            Profile
+          </button>
+        </div>
+        <div className="p-6">
+          <button
+            onClick={handleLogout}
+            className="w-full px-4 py-2 bg-red-600 text-white rounded"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
 
       <main className="flex-1 p-8">
         <h3 className="text-lg font-bold mb-4">My Registered Events</h3>

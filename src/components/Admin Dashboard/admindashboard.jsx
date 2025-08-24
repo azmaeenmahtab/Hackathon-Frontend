@@ -1,6 +1,6 @@
 // src/components/AdminDashboard.js
 import React, { useEffect, useState } from "react";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth, onAuthStateChanged , signOut} from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
 // Card component for events (premium style)
@@ -138,34 +138,85 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleLogout = async () => {
+  try {
+    const auth = getAuth();
+
+    // 1. Sign out from Firebase
+    await signOut(auth);
+
+    // 2. Remove user data from localStorage
+    localStorage.removeItem("uid");
+     // if you stored token
+
+    // 3. Optional: clear app state (Redux/Context)
+    // dispatch(logoutAction());
+
+    // 4. Redirect to login page
+    window.location.href = "/signin"; 
+  } catch (error) {
+    console.error("Logout error:", error);
+  }
+};
+
   return (
     <div className="min-h-screen bg-gray-100 flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-white shadow p-4">
-        <h2 className="text-xl font-bold mb-6">Admin Panel</h2>
-        <ul className="space-y-3">
-          <li><button onClick={() => getAuth().currentUser && loadStats(getAuth().currentUser)}>Dashboard</button></li>
-          <li><button onClick={() => { getAuth().currentUser && loadEvents(getAuth().currentUser); navigate("/admin/manage-events"); }}>Manage Events</button></li>
-        </ul>
+      <aside className="w-64 bg-white shadow flex flex-col justify-between sticky top-0 h-screen p-6">
+        
+        <div className="flex flex-col gap-4">
+          <h2 className="text-2xl font-bold text-purple-700">UnIvents</h2>
+          <h2 className="text-xl font-bold mb-4">Admin Panel</h2>
+          <button
+            onClick={() => loadStats(getAuth().currentUser)}
+            className="px-4 py-2 bg-gray-600 text-white rounded"
+          >
+            Dashboard
+          </button>
+          <button
+            onClick={() => { loadEvents(getAuth().currentUser); navigate("/admin/manage-events"); }}
+            className="px-4 py-2 bg-blue-600 text-white rounded"
+          >
+            Manage Events
+          </button>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="w-full px-4 py-2 bg-red-600 text-white rounded mt-4"
+        >
+          Logout
+        </button>
       </aside>
+
 
       {/* Main */}
       <main className="flex-1 p-6">
         <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-white shadow rounded p-4">
-            <h3 className="text-gray-500">Total Events</h3>
-            <p className="text-2xl font-bold">{stats.totalEvents || 0}</p>
-          </div>
-          <div className="bg-white shadow rounded p-4">
-            <h3 className="text-gray-500">Total Registrations</h3>
-            <p className="text-2xl font-bold">{stats.totalRegistrations || 0}</p>
-          </div>
-          <div className="bg-white shadow rounded p-4">
-            <h3 className="text-gray-500">Certificates Issued</h3>
-            <p className="text-2xl font-bold">{stats.totalCertificates || 0}</p>
+        <div className="sticky top-0 z-20 mb-6 bg-gray-100 pt-4 pb-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="flex items-center bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-xl rounded-xl p-6">
+              <div className="text-4xl mr-4">📅</div>
+              <div>
+                <h3 className="text-gray-200 text-sm uppercase font-semibold">Total Events</h3>
+                <p className="text-2xl font-bold">{stats.totalEvents || 0}</p>
+              </div>
+            </div>
+            <div className="flex items-center bg-gradient-to-r from-green-500 to-green-600 text-white shadow-xl rounded-xl p-6">
+              <div className="text-4xl mr-4">📝</div>
+              <div>
+                <h3 className="text-gray-200 text-sm uppercase font-semibold">Total Registrations</h3>
+                <p className="text-2xl font-bold">{stats.totalRegistrations || 0}</p>
+              </div>
+            </div>
+            <div className="flex items-center bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-xl rounded-xl p-6">
+              <div className="text-4xl mr-4">🎓</div>
+              <div>
+                <h3 className="text-gray-200 text-sm uppercase font-semibold">Certificates Issued</h3>
+                <p className="text-2xl font-bold">{stats.totalCertificates || 0}</p>
+              </div>
+            </div>
           </div>
         </div>
 

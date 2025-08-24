@@ -40,7 +40,8 @@ export default function AdminManageEvents() {
         body: JSON.stringify({ uid })
       });
       const data = await res.json();
-      setEvents(data);
+      // only show active events
+      setEvents(data.filter(evt => !evt.is_cancelled));
     } catch (err) {
       console.error(err);
       setEvents([]);
@@ -92,7 +93,7 @@ export default function AdminManageEvents() {
     const eventData = {
       ...form,
       location_id,
-      image_url: "https://placehold.co/600x400?text=Event+Image", // default image
+      image_url: "https://placehold.co/600x400?text=Event+Image",
       uid
     };
     delete eventData.location_name;
@@ -114,23 +115,32 @@ export default function AdminManageEvents() {
     }
   }
 
+  // SOFT DELETE / CANCEL EVENT
   async function cancelEvent(id) {
+    console.log("Cancelling event:", id);
     if (!window.confirm("Are you sure you want to cancel this event?")) return;
     const auth = getAuth();
     const user = auth.currentUser;
     if (!user) return;
     const token = await user.getIdToken();
+    const uid = localStorage.getItem("uid");
 
     try {
-      await fetch(`http://localhost:4000/api/admin/events/${id}/cancel`, { 
+      const res = await fetch(`http://localhost:4000/api/admin/events/${id}/cancel`, { 
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ uid: localStorage.getItem("uid") })
+        body: JSON.stringify({ uid })
       });
-      loadEvents(user);
+      const data = await res.json();
+      if (res.ok) {
+        // remove the cancelled event immediately from the UI
+        setEvents(prev => prev.filter(evt => evt.id !== id));
+      } else {
+        alert(data.error || "Failed to cancel event.");
+      }
     } catch (err) {
       console.error(err);
       alert("Failed to cancel event.");

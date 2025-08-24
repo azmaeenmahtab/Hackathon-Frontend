@@ -1,6 +1,6 @@
 // src/components/AdminDashboard.js
 import React, { useEffect, useState } from "react";
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
 // Card component for events (premium style)
@@ -8,7 +8,9 @@ const EventCard = ({ event, onView, onCertificates }) => (
   <div className="rounded-xl border border-blue-100 bg-white p-6 shadow hover:shadow-xl transition flex flex-col gap-2 min-w-[300px]">
     <div className="flex items-center justify-between mb-2">
       <span className="text-2xl">🎉</span>
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${event.is_cancelled ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>{event.is_cancelled ? 'Cancelled' : 'Active'}</span>
+      <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${event.is_cancelled ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+        {event.is_cancelled ? 'Cancelled' : 'Active'}
+      </span>
     </div>
     <div className="font-bold text-lg text-gray-900">{event.title}</div>
     <div className="text-gray-500 text-sm mb-2">{event.description}</div>
@@ -22,36 +24,33 @@ const EventCard = ({ event, onView, onCertificates }) => (
 );
 
 export default function AdminDashboard() {
- 
-
   const [stats, setStats] = useState({});
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [registrations, setRegistrations] = useState([]);
-
   const navigate = useNavigate();
 
-// Replace the functions in your AdminDashboard component with these:
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) return;
 
-useEffect(() => {
-  loadStats();
-  loadEvents();
-}, []);
+      // load data once user is authenticated
+      loadStats(user);
+      loadEvents(user);
+    });
 
-  async function loadStats() {
+    return () => unsubscribe(); // cleanup listener
+  }, []);
+
+  // Fetch stats
+  const loadStats = async (user) => {
     try {
-      const uid = localStorage.getItem("uid");
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (!user) throw new Error("No authenticated user");
       const token = await user.getIdToken();
-      console.log("User token in the admin dashboard:", token);
+      const uid = localStorage.getItem("uid");
       const res = await fetch("http://localhost:4000/api/admin/stats", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ uid })
       });
       const data = await res.json();
@@ -60,22 +59,16 @@ useEffect(() => {
       console.error(e);
       setStats({});
     }
-  setSelectedEvent(null);
-  }
+  };
 
-  async function loadEvents() {
+  // Fetch all events
+  const loadEvents = async (user) => {
     try {
-      const uid = localStorage.getItem("uid");
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (!user) throw new Error("No authenticated user");
       const token = await user.getIdToken();
+      const uid = localStorage.getItem("uid");
       const res = await fetch("http://localhost:4000/api/admin/events-all", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ uid })
       });
       const data = await res.json();
@@ -84,75 +77,66 @@ useEffect(() => {
       console.error(e);
       setEvents([]);
     }
-  setSelectedEvent(null);
-  }
+    setSelectedEvent(null);
+  };
 
-  async function loadRegistrations(eventId) {
+  const loadRegistrations = async (eventId) => {
     try {
-      const uid = localStorage.getItem("uid");
       const auth = getAuth();
       const user = auth.currentUser;
       if (!user) throw new Error("No authenticated user");
       const token = await user.getIdToken();
+      const uid = localStorage.getItem("uid");
       const res = await fetch(`http://localhost:4000/api/events/${eventId}/registrations`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ uid })
       });
       const data = await res.json();
       setRegistrations(data);
+      setSelectedEvent(eventId);
     } catch (e) {
       console.error(e);
       setRegistrations([]);
     }
-    setSelectedEvent(eventId);
-  }
+  };
 
-  async function markAttendance(regId) {
+  const markAttendance = async (regId) => {
     try {
-      const uid = localStorage.getItem("uid");
       const auth = getAuth();
       const user = auth.currentUser;
       if (!user) throw new Error("No authenticated user");
       const token = await user.getIdToken();
+      const uid = localStorage.getItem("uid");
       await fetch(`http://localhost:4000/api/registrations/${regId}/attendance`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ uid })
       });
       if (selectedEvent) loadRegistrations(selectedEvent);
     } catch (e) {
       console.error(e);
     }
-  }
+  };
 
-  async function generateCertificates(eventId) {
+  const generateCertificates = async (eventId) => {
     try {
-      const uid = localStorage.getItem("uid");
       const auth = getAuth();
       const user = auth.currentUser;
       if (!user) throw new Error("No authenticated user");
       const token = await user.getIdToken();
+      const uid = localStorage.getItem("uid");
       await fetch(`http://localhost:4000/api/events/${eventId}/certificates/generate`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ uid })
       });
       alert("Certificates generated!");
-      loadStats();
+      loadStats(user);
     } catch (e) {
       console.error(e);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
@@ -160,8 +144,8 @@ useEffect(() => {
       <aside className="w-64 bg-white shadow p-4">
         <h2 className="text-xl font-bold mb-6">Admin Panel</h2>
         <ul className="space-y-3">
-          <li><button onClick={loadStats}>Dashboard</button></li>
-          <li><button onClick={() => { loadEvents(); navigate("/admin/manage-events"); }}>Manage Events</button></li>
+          <li><button onClick={() => getAuth().currentUser && loadStats(getAuth().currentUser)}>Dashboard</button></li>
+          <li><button onClick={() => { getAuth().currentUser && loadEvents(getAuth().currentUser); navigate("/admin/manage-events"); }}>Manage Events</button></li>
         </ul>
       </aside>
 
@@ -241,4 +225,3 @@ useEffect(() => {
     </div>
   );
 }
-

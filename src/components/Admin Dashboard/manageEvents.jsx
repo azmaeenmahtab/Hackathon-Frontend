@@ -1,7 +1,7 @@
+/* eslint-disable no-unused-vars */
 // src/components/AdminManageEvents.js
 import React, { useEffect, useState } from "react";
-import { getAuth } from "firebase/auth";
-// import { apiFetch } from "../utils/fetchHelper";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 export default function AdminManageEvents() {
   const [events, setEvents] = useState([]);
@@ -19,24 +19,32 @@ export default function AdminManageEvents() {
   });
 
   useEffect(() => {
-    loadEvents();
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) loadEvents(user);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  async function loadEvents() {
-    const uid = localStorage.getItem("uid");
-    const auth = getAuth();
-    const user = auth.currentUser;
-    if (!user) return;
-    const token = await user.getIdToken();
-    const res = await fetch("http://localhost:4000/api/admin/events-all", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({ uid })
-    });
-    setEvents(await res.json());
+  async function loadEvents(user) {
+    try {
+      const token = await user.getIdToken();
+      const uid = localStorage.getItem("uid");
+      const res = await fetch("http://localhost:4000/api/admin/events-all", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ uid })
+      });
+      const data = await res.json();
+      setEvents(data);
+    } catch (err) {
+      console.error(err);
+      setEvents([]);
+    }
   }
 
   function openForm() {
@@ -56,11 +64,12 @@ export default function AdminManageEvents() {
 
   async function saveEvent(e) {  // create event
     e.preventDefault();
-    const uid = localStorage.getItem("uid");
     const auth = getAuth();
     const user = auth.currentUser;
     if (!user) return;
     const token = await user.getIdToken();
+    const uid = localStorage.getItem("uid");
+
     // 1. Get or create location and get its id
     let location_id = null;
     try {
@@ -78,6 +87,7 @@ export default function AdminManageEvents() {
       alert("Failed to set location");
       return;
     }
+
     // 2. Prepare event data with default image URL
     const eventData = {
       ...form,
@@ -86,22 +96,45 @@ export default function AdminManageEvents() {
       uid
     };
     delete eventData.location_name;
-    await fetch("http://localhost:4000/api/admin/create-event", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify(eventData),
-    });
-    setShowForm(false);
-    loadEvents();
+
+    try {
+      await fetch("http://localhost:4000/api/admin/create-event", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(eventData),
+      });
+      setShowForm(false);
+      loadEvents(user);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to create event.");
+    }
   }
 
   async function cancelEvent(id) {
     if (!window.confirm("Are you sure you want to cancel this event?")) return;
-    await fetch(`/events/${id}`, { method: "DELETE" });
-    loadEvents();
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) return;
+    const token = await user.getIdToken();
+
+    try {
+      await fetch(`http://localhost:4000/api/admin/events/${id}/cancel`, { 
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ uid: localStorage.getItem("uid") })
+      });
+      loadEvents(user);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to cancel event.");
+    }
   }
 
   return (
@@ -124,7 +157,9 @@ export default function AdminManageEvents() {
             <div key={evt.id} className="rounded-xl border border-blue-100 bg-white p-6 shadow hover:shadow-xl transition flex flex-col gap-2 min-w-[300px]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-2xl">🎫</span>
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${evt.is_cancelled ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>{evt.is_cancelled ? 'Cancelled' : 'Active'}</span>
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${evt.is_cancelled ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                  {evt.is_cancelled ? 'Cancelled' : 'Active'}
+                </span>
               </div>
               <div className="font-bold text-lg text-gray-900">{evt.title}</div>
               <div className="text-gray-500 text-sm mb-2">{evt.description}</div>
@@ -149,83 +184,21 @@ export default function AdminManageEvents() {
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white rounded-lg shadow p-6 w-full max-w-lg">
-            <h2 className="text-xl font-bold mb-4">
-              Create Event
-            </h2>
+            <h2 className="text-xl font-bold mb-4">Create Event</h2>
             <form onSubmit={saveEvent} className="space-y-4">
-              <input
-                type="text"
-                placeholder="Title"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className="w-full border p-2 rounded"
-                required
-              />
-              <textarea
-                placeholder="Description"
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                className="w-full border p-2 rounded"
-              />
-                <input
-                  type="text"
-                  placeholder="Category"
-                  value={form.category}
-                  onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  className="w-full border p-2 rounded"
-                />
-                <input
-                  type="text"
-                  placeholder="Location Name"
-                  value={form.location_name}
-                  onChange={(e) => setForm({ ...form, location_name: e.target.value })}
-                  className="w-full border p-2 rounded"
-                  required
-                />
-                <input
-                  type="datetime-local"
-                  placeholder="Registration Deadline"
-                  value={form.registration_deadline}
-                  onChange={(e) => setForm({ ...form, registration_deadline: e.target.value })}
-                  className="w-full border p-2 rounded"
-                />
+              <input type="text" placeholder="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="w-full border p-2 rounded" required />
+              <textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full border p-2 rounded" />
+              <input type="text" placeholder="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full border p-2 rounded" />
+              <input type="text" placeholder="Location Name" value={form.location_name} onChange={(e) => setForm({ ...form, location_name: e.target.value })} className="w-full border p-2 rounded" required />
+              <input type="datetime-local" placeholder="Registration Deadline" value={form.registration_deadline} onChange={(e) => setForm({ ...form, registration_deadline: e.target.value })} className="w-full border p-2 rounded" />
               <div className="flex space-x-2">
-                <input
-                  type="datetime-local"
-                  value={form.start_at}
-                  onChange={(e) => setForm({ ...form, start_at: e.target.value })}
-                  className="w-1/2 border p-2 rounded"
-                  required
-                />
-                <input
-                  type="datetime-local"
-                  value={form.end_at}
-                  onChange={(e) => setForm({ ...form, end_at: e.target.value })}
-                  className="w-1/2 border p-2 rounded"
-                  required
-                />
+                <input type="datetime-local" value={form.start_at} onChange={(e) => setForm({ ...form, start_at: e.target.value })} className="w-1/2 border p-2 rounded" required />
+                <input type="datetime-local" value={form.end_at} onChange={(e) => setForm({ ...form, end_at: e.target.value })} className="w-1/2 border p-2 rounded" required />
               </div>
-              <input
-                type="number"
-                placeholder="Max Capacity"
-                value={form.max_capacity}
-                onChange={(e) => setForm({ ...form, max_capacity: e.target.value })}
-                className="w-full border p-2 rounded"
-              />
+              <input type="number" placeholder="Max Capacity" value={form.max_capacity} onChange={(e) => setForm({ ...form, max_capacity: e.target.value })} className="w-full border p-2 rounded" />
               <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  className="px-4 py-2 bg-gray-400 text-white rounded"
-                  onClick={() => setShowForm(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded"
-                >
-                  Create
-                </button>
+                <button type="button" className="px-4 py-2 bg-gray-400 text-white rounded" onClick={() => setShowForm(false)}>Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded">Create</button>
               </div>
             </form>
           </div>

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EventCard from "../Event cards/EventCard";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth, onAuthStateChanged , signOut} from "firebase/auth";
 import Modal from "../../components/Modal/Modal";
 
 const StudentAllEvents = () => {
@@ -59,6 +59,27 @@ useEffect(() => {
   }
 };
 
+const handleLogout = async () => {
+  try {
+    const auth = getAuth();
+
+    // 1. Sign out from Firebase
+    await signOut(auth);
+
+    // 2. Remove user data from localStorage
+    localStorage.removeItem("uid");
+     // if you stored token
+
+    // 3. Optional: clear app state (Redux/Context)
+    // dispatch(logoutAction());
+
+    // 4. Redirect to login page
+    window.location.href = "/signin"; 
+  } catch (error) {
+    console.error("Logout error:", error);
+  }
+};
+
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -70,7 +91,7 @@ useEffect(() => {
             className="text-gray-700 text-left">My Events</button>
           <button onClick={() => navigate("/student/dashboard")}
             className="text-blue-600 font-semibold text-left">All Events</button>
-          <button className="text-red-500 mt-8 font-semibold text-left">Logout</button>
+          <button className="text-red-500 mt-8 font-semibold text-left" onClick={handleLogout}>Logout</button>
         </nav>
       </aside>
 

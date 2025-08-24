@@ -84,7 +84,8 @@ const StudentMyEvents = () => {
     // dispatch(logoutAction());
 
     // 4. Redirect to login page
-    window.location.href = "/signin"; 
+    // window.location.href = "/signin"; 
+    navigate("/signin");
   } catch (error) {
     console.error("Logout error:", error);
   }

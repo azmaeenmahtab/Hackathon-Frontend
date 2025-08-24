@@ -1,7 +1,8 @@
+/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EventCard from "../Event cards/EventCard";
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Modal from "../../components/Modal/Modal";
 
 const StudentAllEvents = () => {
@@ -10,21 +11,22 @@ const StudentAllEvents = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  useEffect(() => {
-    async function fetchEvents() {
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (!user) return;
-      const token = await user.getIdToken();
-      const res = await fetch("http://localhost:4000/api/global/events-all", {
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-      setAllEvents(data);
-    }
-    fetchEvents();
-  }, []);
+useEffect(() => {
+  const auth = getAuth();
+
+  const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    if (!user) return;
+    const token = await user.getIdToken();
+    const res = await fetch("http://localhost:4000/api/global/events-all", {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    setAllEvents(data);
+  });
+
+  return () => unsubscribe(); // cleanup
+}, []);
 
   // Register for event
   const handleRegister = async (eventId) => {
@@ -79,18 +81,30 @@ const StudentAllEvents = () => {
           {allEvents.length === 0 ? (
             <div className="text-gray-500 text-center py-8 w-full">No events available.</div>
           ) : (
-            allEvents.map(event => (
-              <EventCard
+            allEvents.map(event => {
+  let status = "Upcoming"; // default
+
+  if (event.is_cancelled) {
+    status = "Cancelled";
+  } 
+  // optionally, if you have registration info per user:
+  // if (userRegisteredForThisEvent) status = "Registered";
+
+  return (
+    <EventCard
                 key={event.id}
                 icon={event.icon}
                 type={event.type}
                 title={event.title}
                 description={event.description}
                 date={event.date}
+                status={status}
                 onButtonClick={() => setSelectedEvent(event)}
                 buttonLabel="Register"
               />
-            ))
+  );
+})
+
           )}
         </div>
       </main>

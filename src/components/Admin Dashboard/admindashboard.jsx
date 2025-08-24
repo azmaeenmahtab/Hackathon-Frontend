@@ -168,7 +168,7 @@ export default function AdminDashboard() {
           <h2 className="text-2xl font-bold text-purple-700">UnIvents</h2>
           <h2 className="text-xl font-bold mb-4">Admin Panel</h2>
           <button
-            onClick={() => loadStats(getAuth().currentUser)}
+            onClick={() => { loadStats(getAuth().currentUser); navigate("/admin/dashboard"); }}
             className="px-4 py-2 bg-gray-600 text-white rounded"
           >
             Dashboard

@@ -1,8 +1,10 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
 export default function AdminManageEvents() {
+  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
@@ -163,13 +165,13 @@ export default function AdminManageEvents() {
       <h2 className="text-2xl font-bold text-purple-700">UnIvents</h2>
       <h2 className="text-xl font-bold">Admin Panel</h2>
       <button
-        onClick={() => window.location.href = "/admin/dashboard"}
+        onClick={() => navigate("/admin/dashboard")}
         className="px-4 py-2 bg-gray-600 text-white rounded"
       >
         Dashboard
       </button>
       <button
-        onClick={() => window.location.href = "/admin/manage-events"}
+        onClick={() => navigate("/admin/manage-events")}
         className="px-4 py-2 bg-blue-600 text-white rounded"
       >
         Manage Events

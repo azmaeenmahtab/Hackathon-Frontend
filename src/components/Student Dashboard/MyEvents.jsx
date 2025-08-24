@@ -1,0 +1,180 @@
+/* eslint-disable no-unused-vars */
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import EventCard from "../Event cards/EventCard";
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+
+const StudentMyEvents = () => {
+  const [myEvents, setMyEvents] = useState({ registeredEvents: [], attendedEvents: [] });
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const auth = getAuth();
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
+
+      const token = await user.getIdToken();
+      const uid = localStorage.getItem("uid"); // or user.uid
+      try {
+        const res = await fetch("http://localhost:4000/api/student/my-events", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ uid }),
+        });
+        const data = await res.json();
+        setMyEvents(data);
+      } catch (err) {
+        console.error("Error fetching events:", err);
+      }
+    });
+
+    return () => unsubscribe(); // cleanup listener
+  }, []);
+
+  const handleUnregister = async (eventId) => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const token = await user.getIdToken();
+    const uid = localStorage.getItem("uid");
+
+    try {
+      const res = await fetch(`http://localhost:4000/api/global/events-unregister/${eventId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ uid }),
+      });
+
+      if (res.ok) {
+        // Remove the event from the registeredEvents list in state
+        setMyEvents(prev => ({
+          ...prev,
+          registeredEvents: prev.registeredEvents.filter(e => e.id !== eventId)
+        }));
+        alert("You have successfully unregistered.");
+      } else {
+        alert("Failed to unregister. Try again.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error unregistering. Try again.");
+    }
+  };
+
+  const handleLogout = async () => {
+  try {
+    const auth = getAuth();
+
+    // 1. Sign out from Firebase
+    await signOut(auth);
+
+    // 2. Remove user data from localStorage
+    localStorage.removeItem("uid");
+    localStorage.removeItem("authToken"); // if you stored token
+
+    // 3. Optional: clear app state (Redux/Context)
+    // dispatch(logoutAction());
+
+    // 4. Redirect to login page
+    window.location.href = "/signin"; 
+  } catch (error) {
+    console.error("Logout error:", error);
+  }
+};
+
+  return (
+    <div className="flex min-h-screen bg-gray-100">
+      {/* Sidebar */}
+      <div className="w-64 bg-white shadow-md flex flex-col justify-between sticky top-0 h-screen">
+        <div className="p-6 flex flex-col gap-4">
+          <h2 className="text-2xl font-bold text-purple-700">UnIvents</h2>
+          <button
+            onClick={() => navigate("/student/my-events/dashboard")}
+            className="px-4 py-2 bg-gray-600 text-white rounded"
+          >
+            My Events
+          </button>
+          <button
+            onClick={() => navigate("/student/dashboard")}
+            className="px-4 py-2 bg-blue-600 text-white rounded"
+          >
+            All Events
+          </button>
+          <button
+             
+            className="px-4 py-2 bg-gray-600 text-white rounded"
+          >
+            Profile
+          </button>
+        </div>
+        <div className="p-6">
+          <button
+            onClick={handleLogout}
+            className="w-full px-4 py-2 bg-red-600 text-white rounded"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+
+      <main className="flex-1 p-8">
+        <h3 className="text-lg font-bold mb-4">My Registered Events</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {myEvents.registeredEvents.length === 0 ? (
+            <div className="text-gray-500 text-center py-8 w-full">You have not registered for any events.</div>
+          ) : (
+            myEvents.registeredEvents.map(event => {
+              const status = event.is_cancelled ? "Cancelled" : "Registered";
+              return (
+                <EventCard
+                  key={event.id}
+                  icon={event.icon}
+                  type={event.type}
+                  title={event.title}
+                  description={event.description}
+                  date={event.date}
+                  status={status}
+                  onButtonClick={() => handleUnregister(event.id)}
+                  buttonLabel="Unregister"
+                />
+              );
+            })
+          )}
+        </div>
+
+        <h3 className="text-lg font-bold mb-8 mt-12">Attended Events</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {myEvents.attendedEvents.length === 0 ? (
+            <div className="text-gray-500 text-center py-8 w-full">You have not attended any events yet.</div>
+          ) : (
+            myEvents.attendedEvents.map(event => {
+              const status = event.is_cancelled ? "Cancelled" : "Attended";
+              return (
+                <EventCard
+                  key={event.id}
+                  icon={event.icon}
+                  type={event.type}
+                  title={event.title}
+                  description={event.description}
+                  date={event.date}
+                  status={status}
+                  buttonLabel="Attended"
+                />
+              );
+            })
+          )}
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default StudentMyEvents;

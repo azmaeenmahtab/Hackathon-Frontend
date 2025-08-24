@@ -1,8 +1,20 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
 
 export default function GlassNavbar() {
   const [show, setShow] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+
+  const navigate = useNavigate();
+
+   const handleLogin = () => {
+     navigate("/signin");
+  };
+
+  const handleSignup = () => {
+     navigate("/signup");
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -17,6 +29,9 @@ export default function GlassNavbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
+
+
+ 
 
   return (
     <div
@@ -39,7 +54,7 @@ export default function GlassNavbar() {
 
         {/* Center - Brand */}
         <h1 className="absolute left-1/2 transform -translate-x-1/2 text-xl font-bold text-white">
-          MyBrand
+          UnIvents
         </h1>
 
         {/* Right - Buttons */}
@@ -47,10 +62,10 @@ export default function GlassNavbar() {
           <button className="px-3 py-1 border border-white/50 rounded-full text-white hover:bg-white/10">
             EN ▼
           </button>
-          <button className="px-4 py-2 rounded-full bg-white text-black font-semibold shadow-md hover:bg-gray-100">
-            Book a Demo
+          <button className="px-4 py-2 rounded-full bg-white text-black font-semibold shadow-md hover:bg-gray-100" onClick={handleLogin}>
+            Login
           </button>
-          <button className="text-white hover:text-gray-300">Sign in</button>
+          <button className="text-white hover:text-gray-300" onClick={handleSignup}>Sign Up</button>
         </div>
       </div>
     </div>

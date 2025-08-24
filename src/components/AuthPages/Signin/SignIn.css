@@ -1,0 +1,164 @@
+body{
+	width:100%;
+	background:white;
+	color:black;
+	margin:0;
+	padding:0;
+	overflow-x:hidden;
+}
+
+.button{
+	padding:2vh 2vw;
+	width:40vw;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 10px;
+	box-shadow: 0 0 10px black;
+	margin:10vh 0 0 10vw;
+}
+
+
+.input_field_area{
+	height:85vh;
+	width:60vw;
+	margin:10vh 0 0 50%;
+	transform: translate(-50%,0);
+	box-shadow: 0 0 10px black;
+	border-radius: 10px;
+
+}
+
+.email{
+	height:5%;
+	width:80%;
+	margin:5vh 0 0 50%;
+	transform: translate(-50%,0);
+	padding:2vh 2vw;
+	border-radius: 10px;
+	box-shadow: 0 0 10px black;
+	outline:none;
+	border:none;
+}
+
+.password{
+	height:5%;
+	width:80%;
+	margin:5vh 0 0 50%;
+	transform: translate(-50%,0);
+	padding:2vh 2vw;
+	border-radius: 10px;
+	box-shadow: 0 0 10px black;
+	outline:none;
+	border:none;
+}
+
+
+.role{
+	height:5%;
+	width:40%;
+	margin:5vh 0 0 50%;
+	transform: translate(-50%,0);
+	padding:2vh 2vw;
+	text-align: center;
+	border-radius: 10px;
+	box-shadow: 0 0 10px black;
+	outline:none;
+	border:none;
+
+}
+
+.sign_in_btn{
+	height:5%;
+	width:70%;
+	background: #32CD32;
+	margin:10vh 0 0 50%;
+	transform: translate(-50%,0);
+	border-radius: 10px;
+	padding:2vh 0;
+	box-shadow: 0 0 15px black;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-family: verdana;
+	outline:none;
+	border:none;
+	cursor: pointer;
+	transition: 0.4s;
+}
+.sign_in_btn:hover{
+	box-shadow: 0 0 20px black;
+}
+
+.sign_up_text{
+	height:5%;
+	width:70%;
+	margin:2.5vh 0 0 50%;
+	transform: translate(-50%,0);
+	padding:2vh 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-family: verdana;
+}
+
+.sing_up_button{
+	color:#0ADD08 ;
+	margin:0 1vw ;
+	cursor:pointer;
+}
+
+
+
+.sign_in_with_google_btn{
+	height:5%;
+	width:50%;
+	margin:2.5vh 0 0 50%;
+	color:black;
+	transform: translate(-50%,0);
+	border-radius: 10px;
+	padding:2vh 0;
+	box-shadow: 0 0 10px black;
+	font-family: verdana;
+	outline:none;
+	border:none;
+	cursor: pointer;
+	display: flex;
+}
+
+.google_image{
+	flex:1;
+	height:100%;
+	background: url("google_image.png");
+	background-repeat: no-repeat;
+	background-size: 30%;
+	margin:0 0 0 2.5vw;
+}
+
+
+.sign_in_with_google_btn_text{
+	flex:2;
+	height:100%;
+	display: flex;
+	align-items: center;
+}
+
+@media(max-width:991px){
+	.input_field_area{
+		width:95vw;
+		height:75vh;
+
+	}
+	.sign_in_btn{
+		margin:5vh 0 0 50%;
+	}
+	.sign_up_text{
+		font-size: 12px;
+	}
+	.sign_in_with_google_btn{
+		width:80vw;
+	}
+	.google_image{
+		background-size: 40%;
+	}
+}
